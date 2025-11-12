@@ -18,6 +18,7 @@ pipeline {
             steps {
                 echo 'Building Docker image...'
                 bat 'docker build -t %IMAGE_NAME%:latest .'
+                bat 'docker images'
             }
         }
 
