@@ -3,28 +3,27 @@ pipeline {
 
     environment {
         DOCKER_IMAGE = "finops-monitor"
-        DOCKER_USER = "patilvirupakshi"  // your DockerHub username
+        DOCKER_USER = "patilvirupakshi"
     }
 
     stages {
-
         stage('Checkout Code') {
             steps {
-                echo '📥 Fetching source code from GitHub...'
+                echo 'Fetching code from GitHub...'
                 git branch: 'main', url: 'https://github.com/Viruthebrave/FinOps-Monitor.git'
             }
         }
 
         stage('Build Docker Image') {
             steps {
-                echo '🐳 Building Docker image...'
+                echo 'Building Docker image...'
                 sh 'docker build -t $DOCKER_USER/$DOCKER_IMAGE:latest ./app'
             }
         }
 
         stage('Login to DockerHub') {
             steps {
-                echo '🔑 Logging into DockerHub...'
+                echo 'Logging into DockerHub...'
                 withCredentials([usernamePassword(credentialsId: 'dockerhub-pass', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
                     sh 'echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin'
                 }
@@ -33,28 +32,18 @@ pipeline {
 
         stage('Push Docker Image to DockerHub') {
             steps {
-                echo '🚀 Pushing image to DockerHub...'
+                echo 'Pushing Docker image to DockerHub...'
                 sh 'docker push $DOCKER_USER/$DOCKER_IMAGE:latest'
-            }
-        }
-
-        stage('Deploy to Kubernetes') {
-            steps {
-                echo '⚙️ Deploying to Kubernetes...'
-                sh '''
-                kubectl apply -f k8s/deployment.yaml
-                kubectl apply -f k8s/service.yaml
-                '''
             }
         }
     }
 
     post {
         success {
-            echo '✅ Build and deployment successful! Image pushed to DockerHub.'
+            echo '✅ Build successful! Image pushed to DockerHub.'
         }
         failure {
-            echo '❌ Build failed. Please check the console output for details.'
+            echo '❌ Build failed. Check Jenkins logs.'
         }
     }
 }
