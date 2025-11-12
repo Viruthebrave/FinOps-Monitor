@@ -1,0 +1,19 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: finops-monitor
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: finops-monitor
+  template:
+    metadata:
+      labels:
+        app: finops-monitor
+    spec:
+      containers:
+        - name: finops-monitor
+          image: <your-dockerhub-username>/finops-monitor:latest
+          ports:
+            - containerPort: 5000
