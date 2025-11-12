@@ -2,8 +2,8 @@ pipeline {
     agent any
 
     environment {
-        DOCKER_IMAGE = "finops-monitor"
-        DOCKER_USER = "patilvirupakshi"
+        DOCKER_HUB_CREDENTIALS = credentials('dockerhub-pass')
+        IMAGE_NAME = "patilvirupakshi/finops-monitor"
     }
 
     stages {
@@ -17,30 +17,28 @@ pipeline {
         stage('Build Docker Image') {
             steps {
                 echo 'Building Docker image...'
-                sh 'docker build -t $DOCKER_USER/$DOCKER_IMAGE:latest ./app'
+                bat 'docker build -t %IMAGE_NAME%:latest .'
             }
         }
 
         stage('Login to DockerHub') {
             steps {
                 echo 'Logging into DockerHub...'
-                withCredentials([usernamePassword(credentialsId: 'dockerhub-pass', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
-                    sh 'echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin'
-                }
+                bat 'echo %DOCKER_HUB_CREDENTIALS_PSW% | docker login -u %DOCKER_HUB_CREDENTIALS_USR% --password-stdin'
             }
         }
 
         stage('Push Docker Image to DockerHub') {
             steps {
-                echo 'Pushing Docker image to DockerHub...'
-                sh 'docker push $DOCKER_USER/$DOCKER_IMAGE:latest'
+                echo 'Pushing image to DockerHub...'
+                bat 'docker push %IMAGE_NAME%:latest'
             }
         }
     }
 
     post {
         success {
-            echo '✅ Build successful! Image pushed to DockerHub.'
+            echo '✅ Build and deployment successful! Image pushed to DockerHub.'
         }
         failure {
             echo '❌ Build failed. Check Jenkins logs.'
