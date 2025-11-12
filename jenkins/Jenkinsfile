@@ -2,44 +2,52 @@ pipeline {
     agent any
 
     environment {
-        DOCKER_HUB_CREDENTIALS = credentials('dockerhub-pass')
-        IMAGE_NAME = "patilvirupakshi/finops-monitor"
+        DOCKERHUB_CREDENTIALS = credentials('dockerhub-pass')  // Jenkins credentials ID
+        IMAGE_NAME = "patilvirupakshi/finops-monitor:latest"
     }
 
     stages {
         stage('Checkout Code') {
             steps {
                 echo 'Fetching code from GitHub...'
-                git branch: 'main', url: 'https://github.com/Viruthebrave/FinOps-Monitor.git'
+                git 'https://github.com/Viruthebrave/FinOps-Monitor.git'
             }
         }
 
         stage('Build Docker Image') {
             steps {
-                echo 'Building Docker image...'
-                bat 'docker build -t %IMAGE_NAME%:latest .'
-                bat 'docker images'
+                echo 'Building Docker image without BuildKit...'
+                bat '''
+                set DOCKER_BUILDKIT=0
+                docker build --no-cache -t %IMAGE_NAME% .
+                '''
             }
         }
 
         stage('Login to DockerHub') {
             steps {
                 echo 'Logging into DockerHub...'
-                bat 'echo %DOCKER_HUB_CREDENTIALS_PSW% | docker login -u %DOCKER_HUB_CREDENTIALS_USR% --password-stdin'
+                bat """
+                echo %DOCKERHUB_CREDENTIALS_PSW% | docker login -u %DOCKERHUB_CREDENTIALS_USR% --password-stdin
+                """
             }
         }
 
         stage('Push Docker Image to DockerHub') {
             steps {
                 echo 'Pushing image to DockerHub...'
-                bat 'docker push %IMAGE_NAME%:latest'
+                bat '''
+                docker image save %IMAGE_NAME% -o finops.tar
+                docker load -i finops.tar
+                docker push %IMAGE_NAME%
+                '''
             }
         }
     }
 
     post {
         success {
-            echo '✅ Build and deployment successful! Image pushed to DockerHub.'
+            echo '✅ Docker image successfully pushed to DockerHub!'
         }
         failure {
             echo '❌ Build failed. Check Jenkins logs.'
