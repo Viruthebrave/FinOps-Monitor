@@ -10,7 +10,7 @@ pipeline {
         stage('Checkout Code') {
             steps {
                 echo 'Fetching code from GitHub...'
-                git 'https://github.com/Viruthebrave/FinOps-Monitor.git'
+                git url: 'https://github.com/Viruthebrave/FinOps-Monitor.git', branch: 'main'
             }
         }
 
